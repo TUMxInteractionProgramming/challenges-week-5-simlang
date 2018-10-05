@@ -5,6 +5,9 @@ console.log("App is alive");
 /** #7 Create global variable */
 var currentChannel;
 
+var inCreateChannelMode = false;
+var currentTab = 'new';
+
 /** #7 We simply initialize it with the channel selected by default - sevencontinents */
 currentChannel = sevencontinents;
 
@@ -48,6 +51,10 @@ function switchChannel(channelObject) {
 
     /* #7 store selected channel in global variable */
     currentChannel = channelObject;
+
+    if(inCreateChannelMode){
+        channelAbortClicked();
+    }
 }
 
 /* liking a channel on #click */
@@ -99,11 +106,19 @@ function Message(text) {
     this.text = text;
     // own message
     this.own = true;
+
+    this.messages = [];
 }
 
 function sendMessage() {
     // #8 Create a new message to send and log it.
     //var message = new Message("Hello chatter");
+    if($('#message').val().length == 0){
+        return;
+    }
+
+    currentChannel.messages.push(message);
+    currentChannel.messageCount++;
 
     // #8 let's now use the real message #input
     var message = new Message($('#message').val());
@@ -118,6 +133,8 @@ function sendMessage() {
 
     // #8 clear the message input
     $('#message').val('');
+
+    
 }
 
 /**
@@ -145,16 +162,28 @@ function createMessageElement(messageObject) {
 }
 
 
-function listChannels() {
+function listChannels(criterion) {
     // #8 channel onload
     //$('#channels ul').append("<li>New Channel</li>")
-
-    // #8 five new channels
-    $('#channels ul').append(createChannelElement(yummy));
-    $('#channels ul').append(createChannelElement(sevencontinents));
-    $('#channels ul').append(createChannelElement(killerapp));
-    $('#channels ul').append(createChannelElement(firstpersononmars));
-    $('#channels ul').append(createChannelElement(octoberfest));
+    $('#channels ul').empty();
+    switch(criterion){
+        case 'favorites':
+            channels.sort(compareFavorites);
+            currentTab = criterion;
+            break;
+        case 'trending':
+            channels.sort(compareTrending);
+            currentTab = criterion;
+            break;
+        case 'new':
+        default:
+            channels.sort(compareNew);
+            currentTab = 'new';
+            break;
+    }
+    for(var i = 0; i < channels.length; i++){
+        $('#channels ul').append(createChannelElement(channels[i]));
+    }
 }
 
 /**
@@ -192,4 +221,93 @@ function createChannelElement(channelObject) {
 
     // return the complete channel
     return channel;
+}
+
+//Sorting functions
+function compareNew(channelOne, channelTwo){
+    if(channelOne.createdOn > channelTwo.createdOn){
+        return -1;
+    } else {
+        return 1;
+    }
+}
+
+function compareTrending(channelOne, channelTwo){
+    if(channelOne.messageCount > channelTwo.messageCount){
+        return -1;
+    } else {
+        return 1;
+    }
+}
+
+function compareFavorites(channelOne, channelTwo){
+    if(channelOne.starred == false && channelTwo.starred == true){
+        return 1;
+    } else {
+        return -1;
+    }
+}
+
+//emoji function
+function listEmojis(){
+    var emojis = require('emojis-list');
+    for(var i = 0; i < emojis.length; i++){
+        $('#emojis').append(emojis[i]);
+    }
+}
+
+//new Channel interaction
+
+function channelFABClicked(){
+    if(!inCreateChannelMode){
+        $('#messages').empty();
+        switchToCreateChannelUI();
+        inCreateChannelMode = true;
+    }
+}
+
+function channelAbortClicked(){
+    switchToCreateChannelUI();
+    inCreateChannelMode = false;
+    switchChannel(currentChannel);
+}
+
+function createChannelClicked(){
+    var newChannelName = $('#newChannelInput').val();
+    
+    if(newChannelName.length == 0){
+        return;
+    } else if(newChannelName.charAt(0) != '#'){
+        return;
+    } else if(newChannelName.includes(' ')){
+        return;
+    } else if($('#message').val().length == 0){
+        return
+    }
+
+    var newChannel = new Channel(newChannelName);
+    channels.push(newChannel);
+    switchChannel(newChannel);
+    listChannels(currentTab);
+    sendMessage();
+    $('#newChannelInput').val('');
+}
+
+
+function Channel(newChannelName){
+    this.name = newChannelName;
+    this.createdOn = new Date();
+    this.createdBy = currentLocation.what3words;
+    this.starred = false;
+    this.expiresIn = 15;
+    this.messageCount = 0;
+    this.messages = [];
+}
+
+function switchToCreateChannelUI(){
+    $('#channelBar').toggle();
+    $('#new-channel-toggle-box').toggle();
+
+    $('#createChannel').toggle();
+    $('#sendMessage').toggle();
 }

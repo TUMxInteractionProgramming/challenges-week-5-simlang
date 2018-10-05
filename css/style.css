@@ -125,13 +125,38 @@ h1 a {
     color: white;
 }
 
-h1 button {
+#channelBar button {
     /* #7 #icns #str  */
     position: absolute;
     right: 16px;
     bottom: 6px;
     /* #7 #icns #small adjust icon size */
     font-size:24px;
+}
+
+#new-channel-toggle-box {
+    display: none;
+} 
+
+#newChannelBar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    position: relative;
+    padding-right: 0px; 
+}
+
+#newChannelBar input{
+    flex-grow: 1;
+    font-size: 16px;
+    height: 24px;
+    border-radius: 2px;
+    border: 0px;
+    padding: 4px;
+}
+
+#createChannel{
+    display: none;
 }
 
 /* CHANNELS LIST */
@@ -278,7 +303,7 @@ li.selected {
 }
 
 /* #8 #input #styles for font, border, and alignment */
-#chat-bar input {
+#chat-bar input{
     /* styles */
     font-size: 16px;
     border: none;
